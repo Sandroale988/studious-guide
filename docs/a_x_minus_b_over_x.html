@@ -57,10 +57,12 @@
         background: #1a3a5c;
         outline: none;
         -webkit-appearance: none;
+        appearance: none;
       }
 
       input[type='range']::-webkit-slider-thumb {
         -webkit-appearance: none;
+        appearance: none;
         appearance: none;
         width: 18px;
         height: 18px;
@@ -119,7 +121,7 @@
         <span id="bValue" class="valueLabel">1.0</span>
       </div>
       <div id="formulaBox">f(x) = 1.0*x - 1.0/x</div>
-      <p style="margin-top: 0.7rem; margin-bottom: 0;">A 3D plot of f(x) = a*x - b/x is shown with x, y, and z axes. One slider adjusts a, and one slider adjusts b. Grab a connected VR controller and use the select trigger to rotate and translate the axis group.</p>
+      <p style="margin-top: 0.7rem; margin-bottom: 0;">A 3D plot of f(x) = a*x - b/x is shown with x, y, and z axes. One slider adjusts a, and one slider adjusts b. Grab a connected VR controller and use the select trigger to rotate and translate the axis group, or grab the VR sliders to adjust a and b in VR.</p>
     </div>
     <script type="module">
       import * as THREE from './vendor/three/build/three.module.js';
@@ -170,6 +172,17 @@
       fxCurve = createFxCurve(a, b);
       formulaMesh = createFormulaLabel(a, b);
 
+      const aSliderGroup = createVRSlider('a');
+      aSliderGroup.position.set(0, 0.5, 0.2);
+      scene.add(aSliderGroup);
+
+      const bSliderGroup = createVRSlider('b');
+      bSliderGroup.position.set(0, 0.5, -0.2);
+      scene.add(bSliderGroup);
+
+      updateSliderThumb('a', a);
+      updateSliderThumb('b', b);
+
       const controllers = [createController(0), createController(1)];
       controllers.forEach((controller) => scene.add(controller));
 
@@ -181,6 +194,8 @@
       const axesStartQuat = new THREE.Quaternion();
       const controllerStartPos = new THREE.Vector3();
       const axesStartPos = new THREE.Vector3();
+      let sliderStartX = 0;
+      let sliderStartValue = 0;
 
       const aSlider = document.getElementById('aSlider');
       const formulaBox = document.getElementById('formulaBox');
@@ -203,6 +218,8 @@
         bValue.textContent = b.toFixed(1);
         updateFxCurve();
         updateFormulaBox();
+        updateSliderThumb('a', a);
+        updateSliderThumb('b', b);
       }
 
       function updateFxCurve() {
@@ -210,6 +227,25 @@
           axesGroup.remove(fxCurve);
         }
         fxCurve = createFxCurve(a, b);
+      }
+
+      function updateSliderThumb(name, value) {
+        const thumbMesh = scene.getObjectByName(name + '_thumb');
+        if (thumbMesh) {
+          const minX = -3.14;
+          const maxX = 3.14;
+          const trackLength = maxX - minX;
+          let minVal, maxVal;
+          if (name === 'a') {
+            minVal = -5;
+            maxVal = 5;
+          } else {
+            minVal = 0.1;
+            maxVal = 10;
+          }
+          const normalizedValue = (value - minVal) / (maxVal - minVal);
+          thumbMesh.position.x = minX + normalizedValue * trackLength;
+        }
       }
 
       function updateFormulaBox() {
@@ -325,6 +361,25 @@
         return label;
       }
 
+      function createVRSlider(name) {
+        const group = new THREE.Group();
+
+        const trackGeometry = new THREE.BoxGeometry(6.28, 0.06, 0.06);
+        const trackMaterial = new THREE.MeshStandardMaterial({ color: 0x1a3a5c, roughness: 0.8, metalness: 0.2 });
+        const track = new THREE.Mesh(trackGeometry, trackMaterial);
+        track.name = name + '_track';
+        group.add(track);
+
+        const thumbGeometry = new THREE.BoxGeometry(0.2, 0.15, 0.15);
+        const thumbMaterial = new THREE.MeshStandardMaterial({ color: 0x88c8ff, roughness: 0.3, metalness: 0.6, emissive: 0x44a0ff, emissiveIntensity: 0.3 });
+        const thumb = new THREE.Mesh(thumbGeometry, thumbMaterial);
+        thumb.name = name + '_thumb';
+        thumb.position.x = 0;
+        group.add(thumb);
+
+        return group;
+      }
+
       function createFxCurve(a, b) {
         const points = [];
         const start = -Math.PI * 4;
@@ -370,12 +425,25 @@
         const controller = event.target;
         const intersections = getControllerIntersections(controller);
         if (intersections.length) {
-          selectedMode = 'transform';
-          selectedController = controller;
-          controllerStartQuat.copy(controller.quaternion);
-          axesStartQuat.copy(axesGroup.quaternion);
-          controllerStartPos.setFromMatrixPosition(controller.matrixWorld);
-          axesStartPos.copy(axesGroup.position);
+          const hitObject = intersections[0].object;
+          if (hitObject.name === 'a_thumb' || hitObject.name === 'a_track') {
+            selectedMode = 'slider_a';
+            selectedController = controller;
+            sliderStartX = intersections[0].point.x;
+            sliderStartValue = a;
+          } else if (hitObject.name === 'b_thumb' || hitObject.name === 'b_track') {
+            selectedMode = 'slider_b';
+            selectedController = controller;
+            sliderStartX = intersections[0].point.x;
+            sliderStartValue = b;
+          } else {
+            selectedMode = 'transform';
+            selectedController = controller;
+            controllerStartQuat.copy(controller.quaternion);
+            axesStartQuat.copy(axesGroup.quaternion);
+            controllerStartPos.setFromMatrixPosition(controller.matrixWorld);
+            axesStartPos.copy(axesGroup.position);
+          }
         }
       }
 
@@ -388,7 +456,10 @@
         tempMatrix.identity().extractRotation(controller.matrixWorld);
         raycaster.ray.origin.setFromMatrixPosition(controller.matrixWorld);
         raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
-        return raycaster.intersectObjects(axesGroup.children, true);
+        return raycaster.intersectObjects(aSliderGroup.children, true).concat(
+          raycaster.intersectObjects(bSliderGroup.children, true),
+          raycaster.intersectObjects(axesGroup.children, true)
+        );
       }
 
       function onWindowResize() {
@@ -406,6 +477,42 @@
           const currentPos = new THREE.Vector3().setFromMatrixPosition(selectedController.matrixWorld);
           const deltaPos = currentPos.clone().sub(controllerStartPos);
           axesGroup.position.copy(axesStartPos).add(deltaPos);
+        } else if (selectedController && (selectedMode === 'slider_a' || selectedMode === 'slider_b')) {
+          tempMatrix.identity().extractRotation(selectedController.matrixWorld);
+          raycaster.ray.origin.setFromMatrixPosition(selectedController.matrixWorld);
+          raycaster.ray.direction.set(0, 0, -1).applyMatrix4(tempMatrix);
+          const sliderIntersections = selectedMode === 'slider_a' ?
+            raycaster.intersectObjects(aSliderGroup.children, true) :
+            raycaster.intersectObjects(bSliderGroup.children, true);
+          if (sliderIntersections.length) {
+            const currentX = sliderIntersections[0].point.x;
+            const deltaX = currentX - sliderStartX;
+            const minX = -3.14;
+            const maxX = 3.14;
+            const trackLength = maxX - minX;
+            const normalizedDelta = deltaX / trackLength;
+            let minVal, maxVal, value;
+            if (selectedMode === 'slider_a') {
+              minVal = -5;
+              maxVal = 5;
+              value = sliderStartValue + normalizedDelta * (maxVal - minVal);
+              value = Math.max(minVal, Math.min(maxVal, value));
+              a = value;
+              aSlider.value = a;
+              aValue.textContent = a.toFixed(1);
+            } else {
+              minVal = 0.1;
+              maxVal = 10;
+              value = sliderStartValue + normalizedDelta * (maxVal - minVal);
+              value = Math.max(minVal, Math.min(maxVal, value));
+              b = value;
+              bSlider.value = b;
+              bValue.textContent = b.toFixed(1);
+            }
+            updateFxCurve();
+            updateFormulaBox();
+            updateSliderThumb(selectedMode === 'slider_a' ? 'a' : 'b', value);
+          }
         }
         if (formulaMesh) {
           formulaMesh.lookAt(camera.position);
