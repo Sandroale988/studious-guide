@@ -164,9 +164,11 @@
       let fxCurve = null;
       let a = 1;
       let b = 1;
+      let formulaMesh = null;
 
       createAxes();
       fxCurve = createFxCurve(a, b);
+      formulaMesh = createFormulaLabel(a, b);
 
       const controllers = [createController(0), createController(1)];
       controllers.forEach((controller) => scene.add(controller));
@@ -212,7 +214,23 @@
 
       function updateFormulaBox() {
         const bText = b < 0 ? `+ ${Math.abs(b).toFixed(1)}/x` : `- ${b.toFixed(1)}/x`;
-        formulaBox.textContent = `f(x) = ${a.toFixed(1)}*x ${bText}`;
+        const text = `f(x) = ${a.toFixed(1)}*x ${bText}`;
+        formulaBox.textContent = text;
+
+        // Update 3D label
+        if (formulaMesh) {
+          const canvas = formulaMesh.material.map.image;
+          const ctx = canvas.getContext('2d');
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = 'rgba(5, 9, 24, 0.0)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.font = 'bold 80px system-ui, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#dbe8ff';
+          ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+          formulaMesh.material.map.needsUpdate = true;
+        }
       }
 
       function createAxes() {
@@ -276,6 +294,34 @@
         );
         label.position.set(x, y, z);
         label.lookAt(camera.position);
+        return label;
+      }
+
+      function createFormulaLabel(a, b) {
+        const bText = b < 0 ? `+ ${Math.abs(b).toFixed(1)}/x` : `- ${b.toFixed(1)}/x`;
+        const text = `f(x) = ${a.toFixed(1)}*x ${bText}`;
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'rgba(5, 9, 24, 0.0)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.font = 'bold 80px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#dbe8ff';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        texture.encoding = THREE.sRGBEncoding;
+
+        const label = new THREE.Mesh(
+          new THREE.PlaneGeometry(2.5, 0.6),
+          new THREE.MeshBasicMaterial({ map: texture, transparent: true })
+        );
+        label.position.set(0, 2.5, -0.5);
+        label.lookAt(camera.position);
+        axesGroup.add(label);
         return label;
       }
 
@@ -360,6 +406,9 @@
           const currentPos = new THREE.Vector3().setFromMatrixPosition(selectedController.matrixWorld);
           const deltaPos = currentPos.clone().sub(controllerStartPos);
           axesGroup.position.copy(axesStartPos).add(deltaPos);
+        }
+        if (formulaMesh) {
+          formulaMesh.lookAt(camera.position);
         }
         renderer.render(scene, camera);
       }
