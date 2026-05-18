@@ -1,5 +1,19 @@
-WIP!
+# Contribuire a "Metaverso a Scuola"
 
-If you know how to work with GitHub PR flow go for it.
+Ci sono tre modi per contribuire:
+1. Partecipare, proporre e discutere
+2. Segnalando anomalie
+3. Scrivendo codice
 
-Otherwise, open an issue: https://github.com/aab016/studious-guide/issues/new to contact the team of "Metaverse @ School".
+## 1. Partecipare, proporre e discutere
+Tutte le discussioni avvengono al seguente Subreddit
+
+https://www.reddit.com/r/ItalyLabInfo/
+
+## 2. Segnalando anomalie
+Se riscontri anomalie sulle esperienze VR attualmente pubblicate puoi segnalarle tale anomalia dalla seguente pagina
+
+https://github.com/aab016/studious-guide/issues/new to contact the team of "Metaverse @ School".
+
+## 3. Scrivendo codice
+Se leggi questo paragrafo sai già cosa fare: fork, code, PR & repeat!
