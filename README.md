@@ -51,3 +51,5 @@ Catalogo: https://education.carraro-lab.com/catalogo-dei-laboratori-didattici/
 Network e hardware in 3D: https://education.carraro-lab.com/catalogo-dei-laboratori-didattici/informatica-e-telecomunicazioni,istituti-tecnici/network-hardware-3d-lab/
 
 Virtual Hospitality: https://education.carraro-lab.com/catalogo-dei-laboratori-didattici/istituti-tecnici,turismo/virtual-hospitality/
+
+Catalogo Istituti Tecnici: https://education.carraro-lab.com/catalogo-dei-laboratori-didattici-istituti-tecnici/
