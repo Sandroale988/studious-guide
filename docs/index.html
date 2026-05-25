@@ -99,11 +99,13 @@
 
     <div class="foot">
       <p>Vuoi aiutare a creare esperienze per insegnanti e studenti?<br /><a class="cta" href="https://github.com/aab016/studious-guide/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener noreferrer">Contribuisci</a></p>
-      <p style="margin-top:12px"><a id="open-in-meta-quest" class="cta" href="https://www.oculus.com/open_url/?url=https://aab016.github.io/studious-guide/" target="_blank" rel="noopener noreferrer">Apri in Meta Quest</a></p>
+      <p style="margin-top:12px;"><a id="open-in-meta-quest" class="cta" href="#" target="_blank" rel="noopener noreferrer">Apri in Meta Quest</a></p>
       <script>
         $(function() {
+          $("#open-in-meta-quest").hide();
           window_location_href = window.location.href;
-        document.getElementById("open-in-meta-quest").href = "https://www.oculus.com/open_url/?url=" + encodeURIComponent(window_location_href);
+          $("#open-in-meta-quest").attr("href","https://www.oculus.com/open_url/?url=" + encodeURIComponent(window_location_href));
+          $("#open-in-meta-quest").show();
         });
       </script>
       <p style="margin-top:12px;color:#475569;font-size:0.95rem">Contributors: <a href="contributors/aab016.html">aab016</a></p>
