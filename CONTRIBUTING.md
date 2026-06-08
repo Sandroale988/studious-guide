@@ -21,3 +21,11 @@ Se leggi questo paragrafo sai già cosa fare: fork, code, PR & repeat!
 Se non sai da dove partire leggi con attenzione la prez: https://docs.google.com/presentation/d/1dOzF4FJhuoxf1F2Erb8yXoJN69iHroZXrNlUVRbEPzU/edit?usp=drive_link
 
 Se non hai idee in merito a qualche codice far generare il file docs/demo/template.html dovrebbe mostrare un pulsante "Exit to browser" quando si è in modalità immersiva che permetta di uscirne.
+
+## GitHub Codespace PR review
+
+Quando si vuole effettuare push su di una PR è necessario aggiungere l'opzione --no-verify perche il server Git LFS non è in grado di comprendere che abbiamo accesso al fork.
+
+Sostituire _visore1-iislagrange_ con il nome del remote assegnato dall'estensione GitHub Pull Request al checkout. 
+
+git push -f --no-verify visore1-iislagrange HEAD:main
